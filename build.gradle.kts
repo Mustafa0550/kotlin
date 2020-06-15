@@ -1,7 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.crypto.checksum.Checksum
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import proguard.gradle.ProGuardTask
 
@@ -776,40 +775,6 @@ tasks {
             "android-ide-tests",
             ":generators:test"
         )
-    }
-
-    register("runDependenciesWithName") {
-        fun findDependenciesByName(executeTasksNames: Set<String>, rootTasks: List<Task>): Set<Task> {
-            val visited = mutableSetOf<Task>()
-            val queue: MutableList<Task> = rootTasks.toMutableList()
-            val dependencies = mutableSetOf<Task>()
-            while (queue.isNotEmpty()) {
-                val current = queue.pop()
-                if (visited.add(current)) {
-                    if (current.name in executeTasksNames) {
-                        dependencies.add(current)
-                    } else {
-                        queue.addAll(current.taskDependencies.getDependencies(current))
-                    }
-                }
-            }
-            return dependencies
-        }
-
-        gradle.taskGraph.whenReady {
-            this.allTasks.removeIf { it is Test }
-        }
-
-        val taskNames: String by project
-        val roots: String by project
-
-        val dependencies = findDependenciesByName(
-            taskNames.removeSurrounding("\"").split(" ").toSet(),
-            roots.removeSurrounding("\"").split(" ").map { findByPath(it) ?: error("Can't find task `$it`") }
-        )
-
-        println(dependencies.joinToString(separator = "${System.lineSeparator()}  ", prefix = "Added:${System.lineSeparator()}  "))
-        dependsOn(dependencies)
     }
 
     register("publishIdeArtifacts") {
