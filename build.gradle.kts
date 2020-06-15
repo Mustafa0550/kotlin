@@ -796,6 +796,10 @@ tasks {
             return dependencies
         }
 
+        gradle.taskGraph.whenReady {
+            this.allTasks.removeIf { it is Test }
+        }
+
         val taskNames: String by project
         val roots: String by project
 
@@ -1078,3 +1082,15 @@ val Jar.outputFile: File
 
 val Project.sourceSetsOrNull: SourceSetContainer?
     get() = convention.findPlugin(JavaPluginConvention::class.java)?.sourceSets
+
+val disableVerificationTasks = System.getProperty("disable.verification.tasks") == "true"
+if (disableVerificationTasks) {
+    gradle.taskGraph.whenReady {
+        allTasks.forEach {
+            if (it is VerificationTask) {
+                println("DISABLED: '$it'")
+                it.enabled = false
+            }
+        }
+    }
+}
